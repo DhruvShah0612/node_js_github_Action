@@ -1,0 +1,40 @@
+
+name: Node.js CI Pipeline
+
+# Trigger the workflow
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+# Jobs to execute
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Get repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Install Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Step 3: Check Node.js version
+      - name: Check Node version
+        run: node -v
+
+      # Step 4: Check npm version
+      - name: Check npm version
+        run: npm -v
+
+      # Step 5: Validate JavaScript syntax
+      - name: Check JavaScript syntax
+        run: node --check index.js
