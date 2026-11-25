@@ -1,7 +1,7 @@
 
 name: Node.js CI Pipeline
 
-# Trigger workflow on push and pull requests
+# Trigger workflow
 on:
   push:
     branches:
@@ -11,17 +11,18 @@ on:
     branches:
       - main
 
-# Pipeline permissions
+# Permissions
 permissions:
   contents: read
 
 # Jobs
 jobs:
   build:
-    name: Node.js Build and Validation
+    name: Node.js Build and Test
     runs-on: ubuntu-latest
 
     steps:
+
       # Step 1: Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -32,10 +33,13 @@ jobs:
         with:
           node-version: 22
 
-      # Step 3: Check Node and npm versions
+      # Step 3: Check Node.js and npm versions
       - name: Check Node and npm versions
         run: |
+          echo "Node.js Version:"
           node -v
+
+          echo "NPM Version:"
           npm -v
 
       # Step 4: Inspect repository files
@@ -51,7 +55,7 @@ jobs:
           find . -type f -name "*.js" \
             -not -path "./node_modules/*"
 
-      # Step 5: Install dependencies if package-lock.json exists
+      # Step 5: Install dependencies
       - name: Install dependencies
         run: |
           if [ -f package-lock.json ]; then
@@ -81,6 +85,13 @@ jobs:
 
           echo "JavaScript syntax validation successful!"
 
-      # Step 7: Pipeline completion
+      # Step 7: Run automated tests
+      - name: Run automated tests
+        run: npm test
+
+      # Step 8: Pipeline completion
       - name: CI Pipeline Completed
-        run: echo "Node.js CI Pipeline completed successfully!"
+        run: |
+          echo "================================"
+          echo "Node.js CI Pipeline Successful!"
+          echo "================================"
