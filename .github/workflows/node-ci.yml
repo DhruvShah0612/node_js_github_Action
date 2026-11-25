@@ -1,7 +1,7 @@
 
 name: Node.js CI Pipeline
 
-# Trigger the workflow
+# Trigger workflow on push and pull requests
 on:
   push:
     branches:
@@ -11,30 +11,76 @@ on:
     branches:
       - main
 
-# Jobs to execute
+# Pipeline permissions
+permissions:
+  contents: read
+
+# Jobs
 jobs:
   build:
+    name: Node.js Build and Validation
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Get repository code
+      # Step 1: Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Install Node.js
+      # Step 2: Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      # Step 3: Check Node.js version
-      - name: Check Node version
-        run: node -v
+      # Step 3: Check Node and npm versions
+      - name: Check Node and npm versions
+        run: |
+          node -v
+          npm -v
 
-      # Step 4: Check npm version
-      - name: Check npm version
-        run: npm -v
+      # Step 4: Inspect repository files
+      - name: Inspect repository files
+        run: |
+          echo "Current directory:"
+          pwd
 
-      # Step 5: Validate JavaScript syntax
-      - name: Check JavaScript syntax
-        run: node --check index.js
+          echo "Repository contents:"
+          ls -la
+
+          echo "JavaScript files:"
+          find . -type f -name "*.js" \
+            -not -path "./node_modules/*"
+
+      # Step 5: Install dependencies if package-lock.json exists
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      # Step 6: Validate JavaScript syntax
+      - name: Validate JavaScript syntax
+        shell: bash
+        run: |
+          mapfile -t JS_FILES < <(
+            find . -type f -name "*.js" \
+              -not -path "./node_modules/*"
+          )
+
+          if [ "${#JS_FILES[@]}" -eq 0 ]; then
+            echo "ERROR: No JavaScript files found!"
+            exit 1
+          fi
+
+          for file in "${JS_FILES[@]}"; do
+            echo "Checking: $file"
+            node --check "$file"
+          done
+
+          echo "JavaScript syntax validation successful!"
+
+      # Step 7: Pipeline completion
+      - name: CI Pipeline Completed
+        run: echo "Node.js CI Pipeline completed successfully!"
